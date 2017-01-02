@@ -3,15 +3,21 @@
 class MainTest extends BootstrapTest
 {
     /**
-     * @var UserTest
+     * @var UserMysqlTest
      */
-    private $user;
+    private $userMysql;
+
+    /**
+     * @var UserSqliteTest
+     */
+    private $userSqlite;
 
     public function setUp()
     {
         parent::setUp();
 
-        $this->user = new UserTest();
+        $this->userMysql = new UserMysqlTest();
+        $this->userSqlite = new UserSqliteTest();
     }
 
     public function getDataForInsert()
@@ -25,17 +31,27 @@ class MainTest extends BootstrapTest
 
     public function testGetTableName()
     {
-        $this->assertEquals('test_user_table', UserTest::getTableName());
+        $this->assertEquals('test_user_table', UserMysqlTest::getTableName());
     }
 
     public function testGetTablePrefix()
     {
-        $this->assertEquals('prefix_', UserTest::getTablePrefix());
+        $this->assertEquals('prefix_', UserMysqlTest::getTablePrefix());
     }
 
     public function testGetPrimaryKey()
     {
-        $this->assertEquals('uuid', UserTest::getPrimaryKey());
+        $this->assertEquals('uuid', UserMysqlTest::getPrimaryKey());
+    }
+
+    public function testGetDriverNameMysql()
+    {
+        $this->assertEquals('mysql', UserMysqlTest::getDriverName());
+    }
+
+    public function testGetDriverNameSqlite()
+    {
+        $this->assertEquals('sqlite', UserSqliteTest::getDriverName());
     }
 
     // test private functions
@@ -47,7 +63,7 @@ class MainTest extends BootstrapTest
     {
         $data = [];
 
-        $this->invokeMethod($this->user, 'getColumnList', [$data]);
+        $this->invokeMethod($this->userMysql, 'getColumnList', [$data]);
     }
 
     public function testGetColumnList()
@@ -56,7 +72,7 @@ class MainTest extends BootstrapTest
 
         $expected = '`id`,`email`,`name`';
 
-        $result = $this->invokeMethod($this->user, 'getColumnList', [$data[0]]);
+        $result = $this->invokeMethod($this->userMysql, 'getColumnList', [$data[0]]);
 
         $this->assertEquals($expected, $result);
     }
@@ -67,7 +83,7 @@ class MainTest extends BootstrapTest
 
         $expected = '`id` = VALUES(`id`), `email` = VALUES(`email`), `name` = VALUES(`name`)';
 
-        $result = $this->invokeMethod($this->user, 'buildValuesList', [$data[0]]);
+        $result = $this->invokeMethod($this->userMysql, 'buildValuesList', [$data[0]]);
 
         $this->assertEquals($expected, $result);
     }
@@ -80,7 +96,7 @@ class MainTest extends BootstrapTest
 
         $expected = [1, 'user1@email.com', 'User One'];
 
-        $result = $this->invokeMethod($this->user, 'inLineArray', [$data]);
+        $result = $this->invokeMethod($this->userMysql, 'inLineArray', [$data]);
 
         $this->assertEquals($expected, $result);
     }
@@ -91,7 +107,7 @@ class MainTest extends BootstrapTest
 
         $expected = '(?,?,?), (?,?,?), (?,?,?)';
 
-        $result = $this->invokeMethod($this->user, 'buildQuestionMarks', [$data]);
+        $result = $this->invokeMethod($this->userMysql, 'buildQuestionMarks', [$data]);
 
         $this->assertEquals($expected, $result);
     }
@@ -106,7 +122,7 @@ class MainTest extends BootstrapTest
             3, 'user3@email.com', 'User Three',
         ];
 
-        $result = $this->invokeMethod($this->user, 'inLineArray', [$data]);
+        $result = $this->invokeMethod($this->userMysql, 'inLineArray', [$data]);
 
         $this->assertEquals($expected, $result);
     }
@@ -121,7 +137,7 @@ class MainTest extends BootstrapTest
 (?,?,?)
 ON DUPLICATE KEY UPDATE `id` = VALUES(`id`), `email` = VALUES(`email`), `name` = VALUES(`name`)';
 
-        $result = $this->invokeMethod($this->user, 'buildInsertOnDuplicateSql', [$data]);
+        $result = $this->invokeMethod($this->userMysql, 'buildInsertOnDuplicateSql', [$data]);
 
         $this->assertEquals($expected, $result);
     }
@@ -134,7 +150,7 @@ ON DUPLICATE KEY UPDATE `id` = VALUES(`id`), `email` = VALUES(`email`), `name` =
 (?,?,?), (?,?,?), (?,?,?)
 ON DUPLICATE KEY UPDATE `id` = VALUES(`id`), `email` = VALUES(`email`), `name` = VALUES(`name`)';
 
-        $result = $this->invokeMethod($this->user, 'buildInsertOnDuplicateSql', [$data]);
+        $result = $this->invokeMethod($this->userMysql, 'buildInsertOnDuplicateSql', [$data]);
 
         $this->assertEquals($expected, $result);
     }
@@ -147,12 +163,12 @@ ON DUPLICATE KEY UPDATE `id` = VALUES(`id`), `email` = VALUES(`email`), `name` =
 (?,?,?), (?,?,?), (?,?,?)
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)';
 
-        $result = $this->invokeMethod($this->user, 'buildInsertOnDuplicateSql', [$data, ['name']]);
+        $result = $this->invokeMethod($this->userMysql, 'buildInsertOnDuplicateSql', [$data, ['name']]);
 
         $this->assertEquals($expected, $result);
     }
 
-    public function testBuildInsertIgnoreSqlSimple()
+    public function testBuildInsertIgnoreSqlSimpleMysql()
     {
         $data = [
             ['id' => 1, 'email' => 'user1@email.com', 'name' => 'User One']
@@ -161,19 +177,45 @@ ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)';
         $expected = 'INSERT IGNORE INTO `prefix_test_user_table`(`id`,`email`,`name`) VALUES
 (?,?,?)';
 
-        $result = $this->invokeMethod($this->user, 'buildInsertIgnoreSql', [$data]);
+        $result = $this->invokeMethod($this->userMysql, 'buildInsertIgnoreSql', [$data]);
 
         $this->assertEquals($expected, $result);
     }
 
-    public function testBuildInsertIgnoreSqlMulitple()
+    public function testBuildInsertIgnoreSqlSimpleSqlite()
+    {
+        $data = [
+            ['id' => 1, 'email' => 'user1@email.com', 'name' => 'User One']
+        ];
+
+        $expected = 'INSERT OR IGNORE INTO `prefix_test_user_table`(`id`,`email`,`name`) VALUES
+(?,?,?)';
+
+        $result = $this->invokeMethod($this->userSqlite, 'buildInsertIgnoreSql', [$data]);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function testBuildInsertIgnoreSqlMulitpleMysql()
     {
         $data = $this->getDataForInsert();
 
         $expected = 'INSERT IGNORE INTO `prefix_test_user_table`(`id`,`email`,`name`) VALUES
 (?,?,?), (?,?,?), (?,?,?)';
 
-        $result = $this->invokeMethod($this->user, 'buildInsertIgnoreSql', [$data]);
+        $result = $this->invokeMethod($this->userMysql, 'buildInsertIgnoreSql', [$data]);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function testBuildInsertIgnoreSqlMulitpleSqlite()
+    {
+        $data = $this->getDataForInsert();
+
+        $expected = 'INSERT OR IGNORE INTO `prefix_test_user_table`(`id`,`email`,`name`) VALUES
+(?,?,?), (?,?,?), (?,?,?)';
+
+        $result = $this->invokeMethod($this->userSqlite, 'buildInsertIgnoreSql', [$data]);
 
         $this->assertEquals($expected, $result);
     }
@@ -187,7 +229,7 @@ ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)';
         $expected = 'REPLACE INTO `prefix_test_user_table`(`id`,`email`,`name`) VALUES
 (?,?,?)';
 
-        $result = $this->invokeMethod($this->user, 'buildReplaceSql', [$data]);
+        $result = $this->invokeMethod($this->userMysql, 'buildReplaceSql', [$data]);
 
         $this->assertEquals($expected, $result);
     }
@@ -199,7 +241,7 @@ ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)';
         $expected = 'REPLACE INTO `prefix_test_user_table`(`id`,`email`,`name`) VALUES
 (?,?,?), (?,?,?), (?,?,?)';
 
-        $result = $this->invokeMethod($this->user, 'buildReplaceSql', [$data]);
+        $result = $this->invokeMethod($this->userMysql, 'buildReplaceSql', [$data]);
 
         $this->assertEquals($expected, $result);
     }
@@ -211,7 +253,7 @@ ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)';
             ['id' => 2, 'email' => '2@email.com'],
         ];
 
-        $result = $this->invokeMethod($this->user, 'inLineArray', [$rows]);
+        $result = $this->invokeMethod($this->userMysql, 'inLineArray', [$rows]);
 
         $expected = [
             1,

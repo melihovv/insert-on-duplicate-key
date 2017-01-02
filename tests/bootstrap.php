@@ -27,11 +27,11 @@ class BootstrapTest extends \PHPUnit_Framework_TestCase
 }
 
 /**
- * Class UserTest.
+ * Class UserMysqlTest.
  *
- * A user class for testing purpose.
+ * A user class for mysql testing purpose.
  */
-class UserTest extends Model
+class UserMysqlTest extends Model
 {
     use InsertOnDuplicateKey;
 
@@ -47,5 +47,31 @@ class UserTest extends Model
     public static function getTablePrefix()
     {
         return 'prefix_';
+    }
+
+    /**
+     * Override this method for unit test because we don't have a db connection.
+     *
+     * @return string
+     */
+    public static function getDriverName()
+    {
+        return 'mysql';
+    }
+}
+
+/**
+ * Class UserSqliteTest.
+ *
+ * A user class for sqlite testing purpose.
+ */
+class UserSqliteTest extends UserMysqlTest
+{
+    /**
+     * @inheritdoc
+     */
+    public static function getDriverName()
+    {
+        return 'sqlite';
     }
 }

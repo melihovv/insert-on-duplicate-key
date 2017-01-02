@@ -121,6 +121,16 @@ trait InsertOnDuplicateKey
     }
 
     /**
+     * Get the database driver name.
+     *
+     * @return string
+     */
+    public static function getDriverName()
+    {
+        return self::getModelConnectionName()->getDriverName();
+    }
+
+    /**
      * Static function for getting the primary key.
      *
      * @return string
@@ -258,11 +268,32 @@ trait InsertOnDuplicateKey
     protected static function buildInsertIgnoreSql(array $data)
     {
         $first = static::getFirstRow($data);
+        $driverName = ucfirst(static::getDriverName());
 
-        $sql  = 'INSERT IGNORE INTO `' . static::getTablePrefix() . static::getTableName() . '`(' . static::getColumnList($first) . ') VALUES' . PHP_EOL;
+        $sql  = call_user_func('static::get' . $driverName . 'InsertIgnoreSql') . ' INTO `' . static::getTablePrefix() . static::getTableName() . '`(' . static::getColumnList($first) . ') VALUES' . PHP_EOL;
         $sql .=  static::buildQuestionMarks($data);
 
         return $sql;
+    }
+
+    /**
+     * Return mysql specific INSERT IGNORE sql.
+     *
+     * @return string
+     */
+    protected static function getMysqlInsertIgnoreSql()
+    {
+        return 'INSERT IGNORE';
+    }
+
+    /**
+     * Return sqlite specific INSERT IGNORE sql.
+     *
+     * @return string
+     */
+    protected static function getSqliteInsertIgnoreSql()
+    {
+        return 'INSERT OR IGNORE';
     }
 
     /**
