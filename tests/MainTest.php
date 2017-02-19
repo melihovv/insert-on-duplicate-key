@@ -220,7 +220,7 @@ ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)';
         $this->assertEquals($expected, $result);
     }
 
-    public function testBuildReplaceSqlSimple()
+    public function testBuildReplaceSqlSimpleMysql()
     {
         $data = [
             ['id' => 1, 'email' => 'user1@email.com', 'name' => 'User One']
@@ -234,7 +234,21 @@ ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)';
         $this->assertEquals($expected, $result);
     }
 
-    public function testBuildReplaceSqlMulitple()
+    public function testBuildReplaceSqlSimpleSqlite()
+    {
+        $data = [
+            ['id' => 1, 'email' => 'user1@email.com', 'name' => 'User One']
+        ];
+
+        $expected = 'INSERT OR REPLACE INTO `prefix_test_user_table`(`id`,`email`,`name`) VALUES
+(?,?,?)';
+
+        $result = $this->invokeMethod($this->userSqlite, 'buildReplaceSql', [$data]);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function testBuildReplaceSqlMulitpleMysql()
     {
         $data = $this->getDataForInsert();
 
@@ -242,6 +256,18 @@ ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)';
 (?,?,?), (?,?,?), (?,?,?)';
 
         $result = $this->invokeMethod($this->userMysql, 'buildReplaceSql', [$data]);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function testBuildReplaceSqlMulitpleSqlite()
+    {
+        $data = $this->getDataForInsert();
+
+        $expected = 'INSERT OR REPLACE INTO `prefix_test_user_table`(`id`,`email`,`name`) VALUES
+(?,?,?), (?,?,?), (?,?,?)';
+
+        $result = $this->invokeMethod($this->userSqlite, 'buildReplaceSql', [$data]);
 
         $this->assertEquals($expected, $result);
     }

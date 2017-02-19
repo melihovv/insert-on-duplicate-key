@@ -306,10 +306,31 @@ trait InsertOnDuplicateKey
     protected static function buildReplaceSql(array $data)
     {
         $first = static::getFirstRow($data);
+        $driverName = ucfirst(static::getDriverName());
 
-        $sql  = 'REPLACE INTO `' . static::getTablePrefix() . static::getTableName() . '`(' . static::getColumnList($first) . ') VALUES' . PHP_EOL;
+        $sql  = call_user_func('static::get' . $driverName . 'ReplaceSql') . ' INTO `' . static::getTablePrefix() . static::getTableName() . '`(' . static::getColumnList($first) . ') VALUES' . PHP_EOL;
         $sql .=  static::buildQuestionMarks($data);
 
         return $sql;
+    }
+
+    /**
+     * Return mysql specific REPLACE sql.
+     *
+     * @return string
+     */
+    protected static function getMysqlReplaceSql()
+    {
+        return 'REPLACE';
+    }
+
+    /**
+     * Return sqlite specific REPLACE sql.
+     *
+     * @return string
+     */
+    protected static function getSqliteReplaceSql()
+    {
+        return 'INSERT OR REPLACE';
     }
 }
